@@ -33,6 +33,9 @@ def main(args):
     args = parse_args(args)
     if args.dburl and args.setup:
         setup_engine(args.dburl)
+        print('Initialze database...')
+        Base.metadata.drop_all(engine)
+        Base.metadata.create_all(engine)        
         setup_genre()     
         process_film()
         process_keyword()
@@ -81,14 +84,12 @@ class Keyword(Base):
         return "<Keyword(id='%s', film_id='%s', name='%s', rank='%s')>" % (self.id, self.film_id, self.name, self.rank) 
 
 def setup_engine(dburl):
-    print('Initialze database...')
     global engine
     engine = create_engine(dburl, client_encoding='utf8')
     add_process_guards(engine)
     register_after_fork(engine, engine.dispose)
-    Base.metadata.drop_all(engine)
-    Base.metadata.create_all(engine)  
-    
+    return engine
+
 def setup_genre():
     print('Setup GENRE data...')
     session_factory = session(bind=engine)
