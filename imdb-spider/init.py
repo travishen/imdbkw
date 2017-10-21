@@ -4,6 +4,7 @@ import sys
 import os
 
 from multiprocessing import Pool, cpu_count
+from multiprocessing.util import register_after_fork
 
 import argparse
 
@@ -84,6 +85,7 @@ def setup_engine(dburl):
     global engine
     engine = create_engine(dburl, client_encoding='utf8')
     add_process_guards(engine)
+    register_after_fork(engine, engine.dispose)
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)  
     
