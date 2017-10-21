@@ -31,8 +31,9 @@ def parse_args(args):
 
 def main(args):
     args = parse_args(args)
+    global engine
     if args.dburl and args.setup:
-        setup_engine(args.dburl)
+        engine = setup_engine(args.dburl)
         print('Initialze database...')
         Base.metadata.drop_all(engine)
         Base.metadata.create_all(engine)        
@@ -84,7 +85,6 @@ class Keyword(Base):
         return "<Keyword(id='%s', film_id='%s', name='%s', rank='%s')>" % (self.id, self.film_id, self.name, self.rank) 
 
 def setup_engine(dburl):
-    global engine
     engine = create_engine(dburl, client_encoding='utf8')
     add_process_guards(engine)
     register_after_fork(engine, engine.dispose)
