@@ -100,7 +100,7 @@ def setup_genre():
 def process_film(num=1):
     print('Generating FILM sample...')  
     cpu = cpu_count()
-    pool = Pool(processes=4)
+    pool = Pool(processes=cpu)
     session_factory = session(bind=engine)
     result = []
     for genre in session_factory.query(Genre).all():        
@@ -125,7 +125,7 @@ def write_film(titles):
 def process_keyword(num=1):
     print('Generating Keyword sample...')  
     cpu = cpu_count()
-    pool = Pool(processes=4)
+    pool = Pool(processes=cpu)
     session_factory = session(bind=engine)
     result = []
     films = session_factory.query(Film).filter(Film.keywords == None).limit(num).all()
