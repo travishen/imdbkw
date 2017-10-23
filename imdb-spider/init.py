@@ -20,7 +20,7 @@ from sqlalchemy import exc
 import imdb
 
 Base = declarative_base()
-session = sessionmaker()
+session = sessionmaker(autoflush=False)
 dburl = None
 
 def parse_args(args):
@@ -144,7 +144,7 @@ def process_keyword(num=1):
     pool.join
 
 def write_keyword(keywords):
-    engine = setup_engine()
+    engine = setup_engine(dburl)
     session_factory = session(bind=engine) 
     for keyword in keywords:
         if not session_factory.query(Film).filter(Film.keywords.any(Keyword.name == keyword['name'])).count(): 
