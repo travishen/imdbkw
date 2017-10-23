@@ -126,6 +126,7 @@ def write_film(titles):
             session_factory.commit() 
             genre_instance.films.append(film_instance)
             session_factory.commit()
+            print(title)
             
 def process_keyword(num=1):
     print('Generating Keyword sample...')  
