@@ -142,8 +142,8 @@ def process_keyword(num=1):
     engine = setup_engine(dburl)
     session_factory = session(bind=engine)
     result = []
-    films = session_factory.query(Film).filter(Film.keywords == None).limit(num).all()
-    for film in films:    
+    films = session_factory.query(Film).limit(num).all()
+    for film in films:
         process = pool.apply_async(imdb.get_keyword_by_film, (film, ), callback= write_keyword)  
         result.append(process)
     for process in result:
