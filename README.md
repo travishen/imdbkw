@@ -8,7 +8,7 @@ Initialize database:
 
     $ python imdbkw.py --dburl postgresql+psycopg2://username:password@host/dbname --setup
 
-After initialization, you can create sample movies and keywords like:
+After initialization, you can generate sample movies and keywords from imdb like:
 
     >>> import imdbkw
     >>> imdbkw.setup_engine('postgresql+psycopg2://username:password@host/dbname')
