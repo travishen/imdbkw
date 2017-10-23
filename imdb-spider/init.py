@@ -130,6 +130,7 @@ def write_film(titles):
                 session_factory.commit() 
                 genre_instance.films.append(film_instance)
                 session_factory.commit()
+                session_factory.close()
                 print(title)
     except Exception as e:
         logging.exception("message")
@@ -164,6 +165,7 @@ def write_keyword(keywords):
                 film_keyword.keyword = keyword_instance
                 film_instance.keywords.append(film_keyword)
                 session_factory.commit()
+                session_factory.close()
     except Exception as e:
         logging.exception("message")
             
