@@ -4,7 +4,6 @@ import sys
 import os
 
 from multiprocessing import Pool, cpu_count
-from multiprocessing.util import register_after_fork
 
 import argparse
 
@@ -22,8 +21,8 @@ import imdb
 import logging
 
 Base = declarative_base()
-session = sessionmaker(autoflush=False)
-dburl = None
+Session = None
+engine = None
 
 def parse_args(args):
     parser = argparse.ArgumentParser()    
@@ -33,10 +32,9 @@ def parse_args(args):
 
 def main(args):
     args = parse_args(args)
-    global dburl
     if args.dburl and args.setup:
         dburl = args.dburl
-        engine = setup_engine(dburl)
+        setup_engine(dburl)
         print('Initialze database...')
         Base.metadata.drop_all(engine)
         Base.metadata.create_all(engine)        
@@ -85,66 +83,64 @@ class Keyword(Base):
     films = relationship("Film_Keyword", back_populates="keyword") 
 
     def __repr__(self):
-        return "<Keyword(id='%s', film_id='%s', name='%s', rank='%s')>" % (self.id, self.film_id, self.name, self.rank) 
+        return "<Keyword(id='%s', name='%s', rank='%s')>" % (self.id, self.name, self.rank) 
 
 def setup_engine(dburl):
-    engine = create_engine(dburl, client_encoding='utf8')
-    add_process_guards(engine)
-    register_after_fork(engine, engine.dispose)
-    return engine
+    global engine, Session
+    engine = create_engine(dburl, pool_size=10 , max_overflow=-1, pool_recycle=1200)
+    session_factory = sessionmaker(bind=engine, autoflush=False)
+    Session = scoped_session(session_factory)
 
 def setup_genre():
     print('Setup GENRE data...')
-    engine = setup_engine(dburl)
-    session_factory = session(bind=engine)
+    session = Session()
     genres = imdb.get_genres()
     for genre in genres: 
-        session_factory.add(Genre(name= genre['name'], url_name= genre['url_name']))    
-    session_factory.commit()
-    engine.dispose()
+        session.add(Genre(name= genre['name'], url_name= genre['url_name']))    
+    session.commit()
+    session.close()
        
 def process_film(num=1):
     print('Generating FILM sample...')  
     cpu = cpu_count()
     pool = Pool(processes=cpu)
-    engine = setup_engine(dburl)
-    session_factory = session(bind=engine)
+    session = Session()
     result = []
-    for genre in session_factory.query(Genre).all():        
+    for genre in session.query(Genre).all():        
         process = pool.apply_async(imdb.get_title_by_genre, args=(genre, num), callback= write_film)  
         result.append(process)
     for process in result:
         process.wait()
     pool.close();
     pool.join
+    session.close()
     
 def write_film(titles):
     try:
-        engine = setup_engine(dburl)
-        session_factory = session(bind=engine)  
+        session = Session()  
         for title in titles:        
-            if not session_factory.query(Film).filter(Film.imdb_id == title['imdb_id']).count(): 
-                genre_instance = session_factory.query(Genre).filter(Genre.id == title['genre_id']).first()
+            if not session.query(Film).filter(Film.imdb_id == title['imdb_id']).count(): 
+                genre_instance = session.query(Genre).filter(Genre.id == title['genre_id']).first()
                 film_instance = Film(imdb_id = title['imdb_id'], name= title['name'])
-                session_factory.add(film_instance)
-                session_factory.commit() 
+                session.add(film_instance)
+                session.commit() 
                 genre_instance.films.append(film_instance)
-                session_factory.commit()
-                print(title)
-        engine.dispose()
+                session.commit()
+                session.close()
     except Exception as e:
         logging.exception("message")
+    finally:
+        session.close()
             
 def process_keyword(num=1):
     print('Generating Keyword sample...')  
     cpu = cpu_count()
     pool = Pool(processes=cpu)
-    engine = setup_engine(dburl)
-    session_factory = session(bind=engine)
+    session = Session()
     result = []
-    films = session_factory.query(Film).filter(Film.keywords == None).all()
+    films = session.query(Film).filter(Film.keywords == None).all()
     if len(films) >= num:
-        films = films[:num+1]
+        films = films[:num]
     for film in films:
         process = pool.apply_async(imdb.get_keyword_by_film, (film, ), callback= write_keyword)  
         result.append(process)
@@ -152,46 +148,26 @@ def process_keyword(num=1):
         process.wait()
     pool.close();
     pool.join
+    session.close()
 
 def write_keyword(keywords):
     try:
-        engine = setup_engine(dburl)
-        session_factory = session(bind=engine) 
+        session = Session()
         for keyword in keywords:
-            if not session_factory.query(Film).filter(Film.keywords.any(Keyword.name == keyword['name'])).count(): 
-                film_instance = session_factory.query(Film).filter(Film.id == keyword['film_id']).first()
+            if not session.query(Film).filter(Film.keywords.any(Keyword.name == keyword['name'])).count(): 
+                film_instance = session.query(Film).filter(Film.id == keyword['film_id']).first()
                 keyword_instance = Keyword(name = keyword['name'])
-                session_factory.add(keyword_instance)
-                session_factory.commit()
+                session.add(keyword_instance)
+                session.commit()
                 film_keyword = Film_Keyword(relevant = keyword['relevant'])
                 film_keyword.keyword = keyword_instance
                 film_instance.keywords.append(film_keyword)
-                session_factory.commit()
-                session_factory.close()
-        engine.dispose()
+                session.commit()
     except Exception as e:
         logging.exception("message")
+    finally:
+        session.close()
             
-def add_process_guards(engine):
-    @sqlalchemy.event.listens_for(engine, "connect")
-    def connect(dbapi_connection, connection_record):
-        connection_record.info['pid'] = os.getpid()
-
-    @sqlalchemy.event.listens_for(engine, "checkout")
-    def checkout(dbapi_connection, connection_record, connection_proxy):
-        pid = os.getpid()
-        if connection_record.info['pid'] != pid:
-            LOG.debug(_LW(
-                "Parent process %(orig)s forked (%(newproc)s) with an open "
-                "database connection, "
-                "which is being discarded and recreated."),
-                {"newproc": pid, "orig": connection_record.info['pid']})
-            connection_record.connection = connection_proxy.connection = None
-            raise exc.DisconnectionError(
-                "Connection record belongs to pid %s, "
-                "attempting to check out in pid %s" %
-                (connection_record.info['pid'], pid)
-            )   
 
 if __name__ == '__main__':      
     main(sys.argv[1:])
