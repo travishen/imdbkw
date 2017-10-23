@@ -88,7 +88,7 @@ class Keyword(Base):
         return "<Keyword(id='%s', film_id='%s', name='%s', rank='%s')>" % (self.id, self.film_id, self.name, self.rank) 
 
 def setup_engine(dburl):
-    engine = create_engine(dburl, client_encoding='utf8', connect_args={'sslmode':'require'}, echo=True)
+    engine = create_engine(dburl, client_encoding='utf8')
     add_process_guards(engine)
     register_after_fork(engine, engine.dispose)
     return engine
