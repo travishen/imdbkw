@@ -48,10 +48,11 @@ def get_title_by_genre(genre, num):
             if len(titles) < num:
                 imdb_id = parse_imdb_id(a['href'])
                 name = a.get_text()
-                titles.append({'imdb_id': imdb_id, 'name': name, 'genre_id': genre.id})        
+                if len(name) <= 100:
+                    titles.append({'imdb_id': imdb_id, 'name': name, 'genre_id': genre.id})        
         if math.ceil(num / 50) <= page:
             break
-        else:
+        else
             page = page + 1
     return titles
 

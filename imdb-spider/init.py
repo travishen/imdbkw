@@ -19,6 +19,8 @@ from sqlalchemy import exc
 
 import imdb
 
+import logging
+
 Base = declarative_base()
 session = sessionmaker(autoflush=False)
 dburl = None
@@ -115,18 +117,21 @@ def process_film(num=1):
     pool.close();
     pool.join
     
-def write_film(titles):    
-    engine = setup_engine(dburl)
-    session_factory = session(bind=engine)  
-    for title in titles:        
-        if not session_factory.query(Film).filter(Film.imdb_id == title['imdb_id']).count(): 
-            genre_instance = session_factory.query(Genre).filter(Genre.id == title['genre_id']).first()
-            film_instance = Film(imdb_id = title['imdb_id'], name= title['name'])
-            session_factory.add(film_instance)
-            session_factory.commit() 
-            genre_instance.films.append(film_instance)
-            session_factory.commit()
-            print(title)
+def write_film(titles):
+    try:
+        engine = setup_engine(dburl)
+        session_factory = session(bind=engine)  
+        for title in titles:        
+            if not session_factory.query(Film).filter(Film.imdb_id == title['imdb_id']).count(): 
+                genre_instance = session_factory.query(Genre).filter(Genre.id == title['genre_id']).first()
+                film_instance = Film(imdb_id = title['imdb_id'], name= title['name'])
+                session_factory.add(film_instance)
+                session_factory.commit() 
+                genre_instance.films.append(film_instance)
+                session_factory.commit()
+                print(title)
+    except Exception as e:
+        logging.exception("message")
             
 def process_keyword(num=1):
     print('Generating Keyword sample...')  
@@ -145,18 +150,21 @@ def process_keyword(num=1):
     pool.join
 
 def write_keyword(keywords):
-    engine = setup_engine(dburl)
-    session_factory = session(bind=engine) 
-    for keyword in keywords:
-        if not session_factory.query(Film).filter(Film.keywords.any(Keyword.name == keyword['name'])).count(): 
-            film_instance = session_factory.query(Film).filter(Film.id == keyword['film_id']).first()
-            keyword_instance = Keyword(name = keyword['name'])
-            session_factory.add(keyword_instance)
-            session_factory.commit()
-            film_keyword = Film_Keyword(relevant = keyword['relevant'])
-            film_keyword.keyword = keyword_instance
-            film_instance.keywords.append(film_keyword)
-            session_factory.commit()            
+    try:
+        engine = setup_engine(dburl)
+        session_factory = session(bind=engine) 
+        for keyword in keywords:
+            if not session_factory.query(Film).filter(Film.keywords.any(Keyword.name == keyword['name'])).count(): 
+                film_instance = session_factory.query(Film).filter(Film.id == keyword['film_id']).first()
+                keyword_instance = Keyword(name = keyword['name'])
+                session_factory.add(keyword_instance)
+                session_factory.commit()
+                film_keyword = Film_Keyword(relevant = keyword['relevant'])
+                film_keyword.keyword = keyword_instance
+                film_instance.keywords.append(film_keyword)
+                session_factory.commit()
+    except Exception as e:
+        logging.exception("message")
             
 def add_process_guards(engine):
     @sqlalchemy.event.listens_for(engine, "connect")
