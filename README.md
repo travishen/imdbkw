@@ -1,4 +1,4 @@
-# imdb-spider
+# imdbkw
 Create a movie database with imdb films for Plot Keywords anaysis
 
 Usage
