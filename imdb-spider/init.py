@@ -102,6 +102,7 @@ def setup_genre():
     for genre in genres: 
         session_factory.add(Genre(name= genre['name'], url_name= genre['url_name']))    
     session_factory.commit()
+    engine.dispose()
        
 def process_film(num=1):
     print('Generating FILM sample...')  
@@ -117,6 +118,7 @@ def process_film(num=1):
         process.wait()
     pool.close();
     pool.join
+    engine.dispose()
     
 def write_film(titles):
     try:
@@ -142,7 +144,9 @@ def process_keyword(num=1):
     engine = setup_engine(dburl)
     session_factory = session(bind=engine)
     result = []
-    films = session_factory.query(Film).filter(Film.keywords == None).limit(num).all()
+    films = session_factory.query(Film).filter(Film.keywords == None).all()
+    if len(films) < num:
+        films = films[:num+1]
     for film in films:    
         process = pool.apply_async(imdb.get_keyword_by_film, (film, ), callback= write_keyword)  
         result.append(process)
@@ -150,6 +154,7 @@ def process_keyword(num=1):
         process.wait()
     pool.close();
     pool.join
+    engine.dispose()
 
 def write_keyword(keywords):
     try:
