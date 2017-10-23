@@ -52,8 +52,8 @@ def get_title_by_genre(genre, num):
                     titles.append({'imdb_id': imdb_id, 'name': name, 'genre_id': genre.id})        
         if math.ceil(num / 50) <= page:
             break
-        else
-            page = page + 1
+        else:
+            page += 1
     return titles
 
 def get_keyword_by_film(film):
