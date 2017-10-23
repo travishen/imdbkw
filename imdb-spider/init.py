@@ -135,14 +135,14 @@ def write_film(titles):
     except Exception as e:
         logging.exception("message")
             
-def process_keyword():
+def process_keyword(num=1):
     print('Generating Keyword sample...')  
     cpu = cpu_count()
     pool = Pool(processes=cpu)
     engine = setup_engine(dburl)
     session_factory = session(bind=engine)
     result = []
-    films = session_factory.query(Film).filter(Film.keywords == None).all()
+    films = session_factory.query(Film).filter(Film.keywords == None).limit(num).all()
     for film in films:    
         process = pool.apply_async(imdb.get_keyword_by_film, (film, ), callback= write_keyword)  
         result.append(process)
