@@ -88,7 +88,7 @@ class Keyword(Base):
         return "<Keyword(id='%s', film_id='%s', name='%s', rank='%s')>" % (self.id, self.film_id, self.name, self.rank) 
 
 def setup_engine(dburl):
-    engine = create_engine(dburl, client_encoding='utf8')
+    engine = create_engine(dburl, client_encoding='utf8', poolclass=NullPool)
     add_process_guards(engine)
     register_after_fork(engine, engine.dispose)
     return engine
@@ -133,14 +133,14 @@ def write_film(titles):
     except Exception as e:
         logging.exception("message")
             
-def process_keyword(num=1):
+def process_keyword():
     print('Generating Keyword sample...')  
     cpu = cpu_count()
     pool = Pool(processes=cpu)
     engine = setup_engine(dburl)
     session_factory = session(bind=engine)
     result = []
-    films = session_factory.query(Film).filter(Film.keywords == None).limit(num).all()
+    films = session_factory.query(Film).filter(Film.keywords == None).all()
     for film in films:    
         process = pool.apply_async(imdb.get_keyword_by_film, (film, ), callback= write_keyword)  
         result.append(process)
