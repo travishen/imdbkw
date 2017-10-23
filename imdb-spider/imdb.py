@@ -53,7 +53,7 @@ def get_title_by_genre(genre, num):
         if math.ceil(num / 50) <= page:
             break
         else:
-            page += 1
+            page = page + 1
     return titles
 
 def get_keyword_by_film(film):
