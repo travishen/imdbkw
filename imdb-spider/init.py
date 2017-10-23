@@ -16,7 +16,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import exists
 from sqlalchemy import event
 from sqlalchemy import exc
-from sqlalchemy.pool import NullPool
 
 import imdb
 
@@ -89,7 +88,7 @@ class Keyword(Base):
         return "<Keyword(id='%s', film_id='%s', name='%s', rank='%s')>" % (self.id, self.film_id, self.name, self.rank) 
 
 def setup_engine(dburl):
-    engine = create_engine(dburl, client_encoding='utf8', poolclass=NullPool)
+    engine = create_engine(dburl, client_encoding='utf8')
     add_process_guards(engine)
     register_after_fork(engine, engine.dispose)
     return engine
@@ -142,7 +141,9 @@ def process_keyword(num=1):
     engine = setup_engine(dburl)
     session_factory = session(bind=engine)
     result = []
-    films = session_factory.query(Film).limit(num).all()
+    films = session_factory.query(Film).filter(Film.keywords == None).limit(num).all()
+    if len(films) >= num:
+        films = films[:num+1]
     for film in films:
         process = pool.apply_async(imdb.get_keyword_by_film, (film, ), callback= write_keyword)  
         result.append(process)
