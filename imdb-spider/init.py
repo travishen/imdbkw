@@ -118,7 +118,6 @@ def process_film(num=1):
         process.wait()
     pool.close();
     pool.join
-    engine.dispose()
     
 def write_film(titles):
     try:
@@ -152,7 +151,6 @@ def process_keyword(num=1):
         process.wait()
     pool.close();
     pool.join
-    engine.dispose()
 
 def write_keyword(keywords):
     try:
