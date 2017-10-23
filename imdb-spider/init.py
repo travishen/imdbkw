@@ -20,8 +20,8 @@ from sqlalchemy import exc
 import imdb
 
 Base = declarative_base()
-engine = None
-session = sessionmaker(autoflush=False)
+session = sessionmaker()
+dburl = None
 
 def parse_args(args):
     parser = argparse.ArgumentParser()    
@@ -31,9 +31,10 @@ def parse_args(args):
 
 def main(args):
     args = parse_args(args)
-    global engine
+    global dburl
     if args.dburl and args.setup:
-        engine = setup_engine(args.dburl)
+        dburl = args.dburl
+        engine = setup_engine(dburl)
         print('Initialze database...')
         Base.metadata.drop_all(engine)
         Base.metadata.create_all(engine)        
@@ -92,6 +93,7 @@ def setup_engine(dburl):
 
 def setup_genre():
     print('Setup GENRE data...')
+    engine = setup_engine(dburl)
     session_factory = session(bind=engine)
     genres = imdb.get_genres()
     for genre in genres: 
@@ -102,6 +104,7 @@ def process_film(num=1):
     print('Generating FILM sample...')  
     cpu = cpu_count()
     pool = Pool(processes=cpu)
+    engine = setup_engine(dburl)
     session_factory = session(bind=engine)
     result = []
     for genre in session_factory.query(Genre).all():        
@@ -113,6 +116,7 @@ def process_film(num=1):
     pool.join
     
 def write_film(titles):    
+    engine = setup_engine(dburl)
     session_factory = session(bind=engine)  
     for title in titles:        
         if not session_factory.query(Film).filter(Film.imdb_id == title['imdb_id']).count(): 
@@ -127,6 +131,7 @@ def process_keyword(num=1):
     print('Generating Keyword sample...')  
     cpu = cpu_count()
     pool = Pool(processes=cpu)
+    engine = setup_engine(dburl)
     session_factory = session(bind=engine)
     result = []
     films = session_factory.query(Film).filter(Film.keywords == None).limit(num).all()
@@ -139,6 +144,7 @@ def process_keyword(num=1):
     pool.join
 
 def write_keyword(keywords):
+    engine = setup_engine()
     session_factory = session(bind=engine) 
     for keyword in keywords:
         if not session_factory.query(Film).filter(Film.keywords.any(Keyword.name == keyword['name'])).count(): 
