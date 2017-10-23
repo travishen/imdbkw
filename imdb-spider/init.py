@@ -131,6 +131,7 @@ def write_film(titles):
                 genre_instance.films.append(film_instance)
                 session_factory.commit()
                 print(title)
+        engine.dispose()
     except Exception as e:
         logging.exception("message")
             
@@ -141,7 +142,7 @@ def process_keyword(num=1):
     engine = setup_engine(dburl)
     session_factory = session(bind=engine)
     result = []
-    films = session_factory.query(Film).filter(Film.keywords == None).limit(num).all()
+    films = session_factory.query(Film).filter(Film.keywords == None).all()
     if len(films) >= num:
         films = films[:num+1]
     for film in films:
