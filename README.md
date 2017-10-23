@@ -14,5 +14,5 @@ After initialization, you can generate sample movies and keywords from imdb like
     >>> imdbkw.setup_engine('postgresql+psycopg2://username:password@host/dbname')
     >>> number_of_films_per_genre = 10
     >>> imdbkw.process_film(number_of_films_per_genre)
-    >>> number_of_films
+    >>> number_of_films = 10
     >>> imdbkw.process_keyword(number_of_films)
