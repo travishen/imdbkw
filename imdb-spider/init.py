@@ -145,7 +145,7 @@ def process_keyword(num=1):
     session_factory = session(bind=engine)
     result = []
     films = session_factory.query(Film).filter(Film.keywords == None).all()
-    if len(films) < num:
+    if len(films) <= num:
         films = films[:num+1]
     for film in films:    
         process = pool.apply_async(imdb.get_keyword_by_film, (film, ), callback= write_keyword)  
