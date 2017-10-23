@@ -12,12 +12,8 @@ from sqlalchemy import create_engine
 from sqlalchemy import Table, Integer, Column, ForeignKey, Sequence, String
 from sqlalchemy.orm import relationship,scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import exists
-from sqlalchemy import event
-from sqlalchemy import exc
 
 import imdb
-
 import logging
 
 Base = declarative_base()
@@ -101,7 +97,7 @@ def setup_genre():
     session.close()
        
 def process_film(num=1):
-    print('Generating FILM sample...')  
+    print('Generating FILM samples...')  
     cpu = cpu_count()
     pool = Pool(processes=cpu)
     session = Session()
@@ -133,7 +129,7 @@ def write_film(titles):
         session.close()
             
 def process_keyword(num=1):
-    print('Generating Keyword sample...')  
+    print('Generating KEYWORD samples...')  
     cpu = cpu_count()
     pool = Pool(processes=cpu)
     session = Session()
