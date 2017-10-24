@@ -7,13 +7,12 @@ from multiprocessing import Pool, cpu_count
 
 import argparse
 
-import sqlalchemy
-from sqlalchemy import create_engine
-from sqlalchemy import Table, Integer, Column, ForeignKey, Sequence, String
+from sqlalchemy import create_engine, Table, Integer, Column, ForeignKey, Sequence, String
 from sqlalchemy.orm import relationship,scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 import imdb
+
 import logging
 
 Base = declarative_base()
@@ -97,7 +96,7 @@ def setup_genre():
     session.close()
        
 def process_film(num=1):
-    print('Generating FILM samples...')  
+    print('Generating FILM sample...')  
     cpu = cpu_count()
     pool = Pool(processes=cpu)
     session = Session()
@@ -129,7 +128,7 @@ def write_film(titles):
         session.close()
             
 def process_keyword(num=1):
-    print('Generating KEYWORD samples...')  
+    print('Generating Keyword sample...')  
     cpu = cpu_count()
     pool = Pool(processes=cpu)
     session = Session()
@@ -150,15 +149,16 @@ def write_keyword(keywords):
     try:
         session = Session()
         for keyword in keywords:
-            if not session.query(Film).filter(Film.keywords.any(Keyword.name == keyword['name'])).count(): 
-                film_instance = session.query(Film).filter(Film.id == keyword['film_id']).first()
+            if not session.query(Film).filter(Film.keywords.any(Keyword.name == keyword['name'])).count():
                 keyword_instance = Keyword(name = keyword['name'])
                 session.add(keyword_instance)
                 session.commit()
-                film_keyword = Film_Keyword(relevant = keyword['relevant'])
-                film_keyword.keyword = keyword_instance
-                film_instance.keywords.append(film_keyword)
-                session.commit()
+                if not session.query(Film_Keyword).filter(Film_Keyword.film_id == keyword['film_id'], Film_Keyword.keyword_id == keyword_instance.id).count():
+                    film_instance = session.query(Film).filter(Film.id == keyword['film_id']).first()
+                    film_keyword = Film_Keyword(relevant = keyword['relevant'])
+                    film_keyword.keyword = keyword_instance
+                    film_instance.keywords.append(film_keyword)
+                    session.commit()
     except Exception as e:
         logging.exception("message")
     finally:
