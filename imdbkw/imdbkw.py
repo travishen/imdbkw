@@ -160,11 +160,10 @@ def write_keyword(keywords):
                 film_keyword.keyword = keyword_instance
                 film_instance.keywords.append(film_keyword)
                 session.commit()
-            else:
-                if not session.query(Film_Keyword).filter(Film_Keyword.film_id == film_instance.id, Film_Keyword.keyword_id == keyword_instance.id).count():
-                    film_keyword.keyword = keyword_instance
-                    film_instance.keywords.append(film_keyword)
-                    session.commit()                
+            elif not session.query(Film_Keyword).filter(Film_Keyword.film_id == film_instance.id, Film_Keyword.keyword_id == keyword_instance.id).count():
+                film_keyword.keyword = keyword_instance
+                film_instance.keywords.append(film_keyword)
+                session.commit()                
 
     except Exception as e:
         logging.exception("message")
