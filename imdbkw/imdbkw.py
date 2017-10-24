@@ -82,7 +82,7 @@ class Keyword(Base):
 
 def setup_engine(dburl):
     global engine, Session
-    engine = create_engine(dburl, pool_size=50 , max_overflow=-1, pool_recycle=1200)
+    engine = create_engine(dburl, pool_size = 0 , max_overflow=-1, pool_recycle=1200)
     session_factory = sessionmaker(bind=engine, autoflush=False)
     Session = scoped_session(session_factory)
 
@@ -148,18 +148,24 @@ def process_keyword(num=1):
 def write_keyword(keywords):
     try:
         session = Session()
+      
         for keyword in keywords:
-            if not session.query(Film).filter(Film.keywords.any(Keyword.name == keyword['name'])).count():
+            keyword_instance = session.query(Keyword).filter(Keyword.name == keyword['name']).first()
+            film_instance = session.query(Film).filter(Film.id == keyword['film_id']).first()
+            film_keyword = Film_Keyword(relevant = keyword['relevant'])
+            if keyword_instance is None:
                 keyword_instance = Keyword(name = keyword['name'])
                 session.add(keyword_instance)
-                session.commit()
-            keyword_instance = session.query(Keyword).filter(Keyword.name == keyword['name']).first()
-            if not session.query(Film_Keyword).filter(Film_Keyword.film_id == keyword['film_id'], Film_Keyword.keyword_id == keyword_instance.id).count():
-                film_instance = session.query(Film).filter(Film.id == keyword['film_id']).first()
-                film_keyword = Film_Keyword(relevant = keyword['relevant'])
+                session.commit()                
                 film_keyword.keyword = keyword_instance
                 film_instance.keywords.append(film_keyword)
-                session.commit()
+            else:
+                if not session.query(Film_Keyword).filter(Film_Keyword.film_id == film_instance.id, Film_Keyword.keyword_id == keyword_instance.id).count():
+                    film_keyword.keyword = keyword_instance
+                    film_instance.keywords.append(film_keyword)
+            session.commit()
+                
+
     except Exception as e:
         logging.exception("message")
     finally:
