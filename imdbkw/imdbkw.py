@@ -153,12 +153,13 @@ def write_keyword(keywords):
                 keyword_instance = Keyword(name = keyword['name'])
                 session.add(keyword_instance)
                 session.commit()
-                if not session.query(Film_Keyword).filter(Film_Keyword.film_id == keyword['film_id'], Film_Keyword.keyword_id == keyword_instance.id).count():
-                    film_instance = session.query(Film).filter(Film.id == keyword['film_id']).first()
-                    film_keyword = Film_Keyword(relevant = keyword['relevant'])
-                    film_keyword.keyword = keyword_instance
-                    film_instance.keywords.append(film_keyword)
-                    session.commit()
+            keyword_instance = session.query(Keyword).filter(Keyword.name == keyword_instance.name).first()
+            if not session.query(Film_Keyword).filter(Film_Keyword.film_id == keyword['film_id'], Film_Keyword.keyword_id == keyword_instance.id).count():
+                film_instance = session.query(Film).filter(Film.id == keyword['film_id']).first()
+                film_keyword = Film_Keyword(relevant = keyword['relevant'])
+                film_keyword.keyword = keyword_instance
+                film_instance.keywords.append(film_keyword)
+                session.commit()
     except Exception as e:
         logging.exception("message")
     finally:
