@@ -82,7 +82,7 @@ class Keyword(Base):
 
 def setup_engine(dburl):
     global engine, Session
-    engine = create_engine(dburl, pool_size=20 , max_overflow=-1, pool_recycle=1200)
+    engine = create_engine(dburl, pool_size=50 , max_overflow=-1, pool_recycle=1200)
     session_factory = sessionmaker(bind=engine, autoflush=False)
     Session = scoped_session(session_factory)
 
