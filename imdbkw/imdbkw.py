@@ -8,7 +8,7 @@ from multiprocessing import Pool, cpu_count
 import argparse
 
 from sqlalchemy import create_engine, Table, Integer, Column, ForeignKey, Sequence, String
-from sqlalchemy.orm import relationship,scoped_session, sessionmaker
+from sqlalchemy.orm import relationship,scoped_session, sessionmaker, subqueryload
 from sqlalchemy.ext.declarative import declarative_base
 
 import imdb
@@ -101,7 +101,7 @@ def process_film(num=1):
     pool = Pool(processes=cpu)
     session = Session()
     result = []
-    for genre in session.query(Genre).all():        
+    for genre in session.query(Genre).options(subqueryload(Genre.films)).all():        
         process = pool.apply_async(imdb.get_title_by_genre, args=(genre, num), callback= write_film)  
         result.append(process)
     for process in result:
@@ -110,12 +110,14 @@ def process_film(num=1):
     pool.join
     session.close()
     
-def write_film(titles):
+def write_film(args):
+    genre_instance = args[0]
+    titles = args[1]
     try:
-        session = Session()  
+        session = Session()
+        
         for title in titles:        
             if not session.query(Film).filter(Film.imdb_id == title['imdb_id']).count(): 
-                genre_instance = session.query(Genre).filter(Genre.id == title['genre_id']).first()
                 film_instance = Film(imdb_id = title['imdb_id'], name= title['name'])
                 session.add(film_instance)
                 session.commit() 
@@ -133,7 +135,7 @@ def process_keyword(num=1):
     pool = Pool(processes=cpu)
     session = Session()
     result = []
-    films = session.query(Film).outerjoin(Film.keywords).filter(Film.keywords == None).all()
+    films = session.query(Film).options(subqueryload(Film.keywords)).filter(Film.keywords == None).all()
     if len(films) >= num:
         films = films[:num]
     for film in films:
@@ -145,10 +147,11 @@ def process_keyword(num=1):
     pool.join
     session.close()
 
-def write_keyword(keywords):
+def write_keyword(args):
+    film_instance = args[0]
+    keywords = args[1]
     try:
         session = Session()        
-        film_instance = session.query(Film).filter(Film.id == keyword['film_id']).first()
         new = 0
         
         for keyword in keywords:

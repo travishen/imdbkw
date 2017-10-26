@@ -49,12 +49,12 @@ def get_title_by_genre(genre, num):
                 imdb_id = parse_imdb_id(a['href'])
                 name = a.get_text()
                 if len(name) <= 100:
-                    titles.append({'imdb_id': imdb_id, 'name': name, 'genre_id': genre.id})        
+                    titles.append({'imdb_id': imdb_id, 'name': name})        
         if math.ceil(num / 50) <= page:
             break
         else:
             page = page + 1
-    return titles
+    return genre, titles
 
 def get_keyword_by_film(film):
     imdb_id = film.imdb_id
@@ -68,6 +68,6 @@ def get_keyword_by_film(film):
         relevant = item.find('div','interesting-count-text').find('a').get_text().strip()[:1]
         if not parse_int(relevant)[1]:
             relevant = 0
-        keywords.append({'name':name, 'relevant':relevant, 'film_id': film.id})
-    return keywords
+        keywords.append({'name':name, 'relevant':relevant})
+    return film, keywords
         
