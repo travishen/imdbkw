@@ -21,8 +21,8 @@ engine = None
 
 def parse_args(args):
     parser = argparse.ArgumentParser()    
-    parser.add_argument("--dburl", help="postgresql connection string here.")
-    parser.add_argument("--setup", help="postgresql connection string here.", action="store_true")
+    parser.add_argument("--dburl", help="sql connection string here.")
+    parser.add_argument("--setup", help="present to setup database.", action="store_true")
     return parser.parse_args()
 
 def main(args):
@@ -114,8 +114,7 @@ def write_film(args):
     genre_instance = args[0]
     titles = args[1]
     try:
-        session = Session()
-        
+        session = Session()        
         for title in titles:        
             if not session.query(Film).filter(Film.imdb_id == title['imdb_id']).count(): 
                 film_instance = Film(imdb_id = title['imdb_id'], name= title['name'])
@@ -152,8 +151,7 @@ def write_keyword(args):
     keywords = args[1]
     try:
         session = Session()        
-        new = 0
-        
+        new = 0        
         for keyword in keywords:
             keyword_instance = session.query(Keyword).filter(Keyword.name == keyword['name']).first()            
             film_keyword = Film_Keyword(relevant = keyword['relevant'])
@@ -175,8 +173,7 @@ def write_keyword(args):
     except Exception as e:
         logging.exception("message")
     finally:
-        session.close()
-            
+        session.close()            
 
 if __name__ == '__main__':      
     main(sys.argv[1:])
