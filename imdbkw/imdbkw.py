@@ -147,15 +147,15 @@ def process_keyword(num=1):
 
 def write_keyword(keywords):
     try:
-        session = Session()
+        session = Session()        
+        film_instance = session.query(Film).filter(Film.id == keyword['film_id']).first()
         new = 0
+        
         for keyword in keywords:
-            keyword_instance = session.query(Keyword).filter(Keyword.name == keyword['name']).first()
-            film_instance = session.query(Film).filter(Film.id == keyword['film_id']).first()
+            keyword_instance = session.query(Keyword).filter(Keyword.name == keyword['name']).first()            
             film_keyword = Film_Keyword(relevant = keyword['relevant'])
             if keyword_instance is None:
-                new += 1
-                
+                new += 1                
                 keyword_instance = Keyword(name = keyword['name'])
                 session.add(keyword_instance)
                 session.commit()                
