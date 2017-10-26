@@ -148,22 +148,26 @@ def process_keyword(num=1):
 def write_keyword(keywords):
     try:
         session = Session()
-      
+        new = 0
         for keyword in keywords:
             keyword_instance = session.query(Keyword).filter(Keyword.name == keyword['name']).first()
             film_instance = session.query(Film).filter(Film.id == keyword['film_id']).first()
             film_keyword = Film_Keyword(relevant = keyword['relevant'])
             if keyword_instance is None:
+                new += 1
+                
                 keyword_instance = Keyword(name = keyword['name'])
                 session.add(keyword_instance)
                 session.commit()                
                 film_keyword.keyword = keyword_instance
                 film_instance.keywords.append(film_keyword)
-                session.commit()
+                session.commit()                
             elif not session.query(Film_Keyword).filter(Film_Keyword.film_id == film_instance.id, Film_Keyword.keyword_id == keyword_instance.id).count():
                 film_keyword.keyword = keyword_instance
                 film_instance.keywords.append(film_keyword)
-                session.commit()                
+                session.commit()
+
+        print('Found {}/{} new keywords in {}'.format(new, len(keywords), film_instance.name))
 
     except Exception as e:
         logging.exception("message")
