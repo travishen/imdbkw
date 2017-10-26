@@ -82,7 +82,7 @@ class Keyword(Base):
 
 def setup_engine(dburl):
     global engine, Session
-    engine = create_engine(dburl, pool_size = 0 , max_overflow=-1, pool_recycle=1200)
+    engine = create_engine(dburl, pool_size=0 , max_overflow=-1, pool_recycle=1200)
     session_factory = sessionmaker(bind=engine, autoflush=False)
     Session = scoped_session(session_factory)
 
@@ -133,7 +133,7 @@ def process_keyword(num=1):
     pool = Pool(processes=cpu)
     session = Session()
     result = []
-    films = session.query(Film).filter(Film.keywords == None).all()
+    films = session.query(Film).outerjoin(Film.keywords).filter(Film.keywords == None).all()
     if len(films) >= num:
         films = films[:num]
     for film in films:
